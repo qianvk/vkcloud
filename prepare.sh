@@ -1,49 +1,43 @@
 #!/bin/bash
 
-set -e  # Exit immediately if a command exits with a non-zero status
+set -e # Exit on error
 
-# Function to add or update a git submodule to a specific tag
-add_or_update_submodule() {
-    local REPO_URL=$1
-    local SUBMODULE_PATH=$2
-    local TAG=$3
+# Define specific submodules and their versions
+declare -A SUBMODULES
+SUBMODULES["third_party/jsoncpp"]="tags/1.9.6"
 
-    if [ -d "$SUBMODULE_PATH" ]; then
-        echo "Updating existing submodule: $SUBMODULE_PATH"
-        cd "$SUBMODULE_PATH"
-        git fetch --tags
-        git checkout "$TAG"
-        cd - > /dev/null
-    else
-        echo "Adding new submodule: $SUBMODULE_PATH"
-        git submodule add "$REPO_URL" "$SUBMODULE_PATH"
-        cd "$SUBMODULE_PATH"
-        git checkout "$TAG"
-        cd - > /dev/null
-    fi
+BOOST_LIBS=("asio" "system" "throw_exception" "core" "assert" "config" "date_time" "smart_ptr" "utility" "static_assert" "type_traits" "numeric/conversion" "mpl" "preprocessor"
+	"beast" "optional" "mp11" "bind" "intrusive" "move" "logic" "static_string" "container_hash" "describe" "io" "endian")
+
+# Function to update a specific submodule
+update_submodule() {
+	local path=$1
+	local version=$2
+
+	echo "🔄 Updating submodule: $path to version/tag: $version"
+	# Fetch latest tags and checkout the specified version
+	cd "$path"
+	git fetch --tags
+	git checkout "$version" || {
+		echo "❌ Failed to checkout $version for $path"
+		exit 1
+	}
+	cd - >/dev/null
 }
 
-# Ensure we are in the root of the Git repository
-if [ ! -d ".git" ]; then
-    echo "Error: This script must be run from the root of a Git repository."
-    exit 1
-fi
+git submodule update --init
 
-# echo "Initializing and updating submodules..."
-# git submodule update --init --recursive
+for ITEM in "${BOOST_LIBS[@]}"; do
+	cd "third_party/boost"
+	git submodule update --init --recursive "libs/${ITEM}"
+	cd - >/dev/null
+	path="third_party/boost/libs/${ITEM}"
+	update_submodule "$path" "boost-1.87.0"
+done
 
-# Add or update Boost (only Asio & Beast required)
-add_or_update_submodule "https://github.com/boostorg/boost.git" "third_party/boost" "boost-1.84.0"
-cd third_party/boost
-git submodule update --init --recursive libs/asio libs/system libs/throw_exception libs/core libs/assert libs/config libs/date_time libs/smart_ptr libs/utility libs/static_assert libs/type_traits libs/numeric/conversion libs/mpl libs/preprocessor \
-  libs/beast libs/optional libs/mp11 libs/bind libs/intrusive libs/move libs/logic libs/static_string libs/container_hash libs/describe libs/io libs/endian
-cd -
+# Loop through specific submodules and update them
+for path in "${!SUBMODULES[@]}"; do
+	update_submodule "$path" "${SUBMODULES[$path]}"
+done
 
-# Add or update JsonCpp
-add_or_update_submodule "https://github.com/open-source-parsers/jsoncpp.git" "third_party/jsoncpp" "1.9.6"
-
-echo "All submodules initialized successfully!"
-
-# Update all submodules to ensure correct versions
-# git submodule update --recursive --remote
-
+echo "✅ Finished updating specific submodules!"
