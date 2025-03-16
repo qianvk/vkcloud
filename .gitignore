@@ -1,0 +1,19 @@
+/.clangd
+/build
+# Ignore CMake and build artifacts
+third_party/**/build/
+third_party/**/bin/
+third_party/**/lib/
+third_party/**/obj/
+third_party/**/CMakeCache.txt
+third_party/**/CMakeFiles/
+
+# Ignore temporary files
+third_party/**/.vs/
+third_party/**/.idea/
+third_party/**/*.log
+
+# DO NOT IGNORE submodule references!
+!third_party/.gitmodules
+!third_party/**/.git
+
