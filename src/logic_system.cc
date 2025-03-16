@@ -4,6 +4,7 @@
 
 #include "vkcloud/const.h"
 #include "vkcloud/http_connection.h"
+#include "vkcloud/verify_grpc_client.h"
 
 LogicSystem::LogicSystem() {
   RegisterGet("/user", [](std::shared_ptr<HttpConnection> conn_ptr) {
@@ -29,7 +30,11 @@ LogicSystem::LogicSystem() {
       return;
     }
 
-    resp_root["error"] = static_cast<int>(ErrorCode::kSuccess);
+    auto email = req_root["email"].asString();
+    message::GetVerifyRsp rsp =
+        VerifyGRPCClient::Instance()->GetVarifyCode(email);
+    resp_root["error"] = rsp.error();
+    resp_root["code"] = rsp.code();
     resp_root["email"] = req_root["email"];
     beast::ostream(conn_ptr->response_.body()) << resp_root.toStyledString();
   });
