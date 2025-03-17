@@ -20,6 +20,9 @@ add_executable(vkcloud
   src/server.cc
   src/message.pb.cc
   src/message.grpc.pb.cc
+  src/asio_io_service_pool.cc
+  src/configuration_manager.cc
+  src/verify_grpc_client.cc
 )
 
 # ✅ Step 4: Ensure MyApp waits for submodule to finish building
@@ -34,6 +37,8 @@ target_include_directories(vkcloud PRIVATE ${JSONCPP_INSTALL_DIR}/include)
 target_include_directories(vkcloud PRIVATE ${BOOST_INSTALL_DIR}/include)
 target_include_directories(vkcloud PRIVATE ${GRPC_INSTALL_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/include)
+
+file(COPY_FILE ${CMAKE_SOURCE_DIR}/config.json ${CMAKE_BINARY_DIR}/config.json)
 
 # Get include directories and generate a .clangd file
 set(CLANGD_FILE ${CMAKE_SOURCE_DIR}/.clangd)

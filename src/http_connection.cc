@@ -1,17 +1,14 @@
 #include "vkcloud/http_connection.h"
 
 #include "vkcloud/logic_system.h"
-#include <iostream>
 
-HttpConnection::HttpConnection(tcp::socket socket)
-    : socket_(std::move(socket)) {}
+HttpConnection::HttpConnection(asio::io_context &ioc) : socket_(ioc) {}
 
 void HttpConnection::Start() {
   auto self = shared_from_this();
   http::async_read(socket_, buffer_, request_,
                    [self](beast::error_code ec, std::size_t bytes_transfered) {
                      try {
-                       std::cout << ec << "\n";
                        if (ec)
                          return;
 
@@ -26,7 +23,6 @@ void HttpConnection::Start() {
 void HttpConnection::HandleRequest() {
   response_.version(request_.version());
   response_.keep_alive(false);
-  std::cout << request_.version() << "\n";
   if (request_.method() == http::verb::get) {
     bool success = LogicSystem::Instance()->HandleGet(request_.target(),
                                                       shared_from_this());

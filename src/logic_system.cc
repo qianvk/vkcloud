@@ -32,7 +32,7 @@ LogicSystem::LogicSystem() {
 
     auto email = req_root["email"].asString();
     message::GetVerifyRsp rsp =
-        VerifyGRPCClient::Instance()->GetVarifyCode(email);
+        VerifyGRPCClient::Instance()->GetVerifyCode(email);
     resp_root["error"] = rsp.error();
     resp_root["code"] = rsp.code();
     resp_root["email"] = req_root["email"];
